@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Çark - Telegram Mini App</title>
+    <!-- Telegram Web App Script -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #0b0b16;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Animasiyalı Arxa Fon (Neon Parıltılar) */
+        .bg-animation {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: -1;
+            background: linear-gradient(135deg, #0b0b16 0%, #1a0b2e 100%);
+        }
+
+        .circle-glow {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.4;
+            animation: float 8s infinite alternate ease-in-out;
+        }
+
+        .c1 {
+            width: 250px;
+            height: 250px;
+            background: #ff007f;
+            top: -50px;
+            left: -50px;
+        }
+
+        .c2 {
+            width: 300px;
+            height: 300px;
+            background: #00f3ff;
+            bottom: -50px;
+            right: -50px;
+            animation-delay: -4s;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0) scale(1); }
+            100% { transform: translateY(30px) scale(1.1); }
+        }
+
+        /* Başlıq */
+        header {
+            margin-top: 25px;
+            text-align: center;
+            z-index: 2;
+            padding: 0 15px;
+        }
+
+        header h1 {
+            font-size: 22px;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(0, 243, 255, 0.7),
+                         0 0 20px rgba(0, 243, 255, 0.5);
+            letter-spacing: 1px;
+        }
+
+        /* Çark Konteyneri */
+        .wheel-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin: auto;
+            z-index: 2;
+        }
+
+        .pointer {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 30px solid #ff007f;
+            z-index: 10;
+            filter: drop-shadow(0 0 8px #ff007f);
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            box-shadow: 0 0 25px rgba(0, 243, 255, 0.4),
+                        inset 0 0 15px rgba(255, 0, 127, 0.4);
+            border: 4px solid #1f1b3c;
+        }
+
+        /* Fırlat Düyməsi */
+        .spin-btn {
+            background: linear-gradient(135deg, #ff007f 0%, #7928ca 100%);
+            color: white;
+            border: none;
+            padding: 14px 45px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(255, 0, 127, 0.6);
+            transition: 0.2s;
+            margin-bottom: 35px;
+            z-index: 2;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .spin-btn:active {
+            transform: scale(0.95);
+            box-shadow: 0 0 10px rgba(255, 0, 127, 0.8);
+        }
+
+        .spin-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Nəticə Mesajı */
+        #result-modal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: rgba(18, 18, 35, 0.95);
+            border: 2px solid #00f3ff;
+            padding: 20px 30px;
+            border-radius: 15px;
+            text-align: center;
+            z-index: 100;
+            box-shadow: 0 0 30px rgba(0, 243, 255, 0.5);
+            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        #result-modal.show {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        #result-text {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #fff;
+        }
+
+        #result-modal button {
+            background: #00f3ff;
+            color: #0b0b16;
+            border: none;
+            padding: 8px 20px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Arxa fon parıltıları -->
+    <div class="bg-animation">
+        <div class="circle-glow c1"></div>
+        <div class="circle-glow c2"></div>
+    </div>
+
+    <!-- Başlıq -->
+    <header>
+        <h1>10 jeton at fırlat qazan</h1>
+    </header>
+
+    <!-- Çark Bölməsi -->
+    <div class="wheel-container">
+        <div class="pointer"></div>
+        <canvas id="wheel" width="400" height="400"></canvas>
+    </div>
+
+    <!-- Fırlat Düyməsi -->
+    <button class="spin-btn" id="spinBtn" onclick="spinWheel()">Fırlat</button>
+
+    <!-- Nəticə pəncərəsi -->
+    <div id="result-modal">
+        <div id="result-text">Təbriklər!</div>
+        <button onclick="closeModal()">OK</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('wheel');
+        const ctx = canvas.getContext('2d');
+        const spinBtn = document.getElementById('spinBtn');
+        const resultModal = document.getElementById('result-modal');
+        const resultText = document.getElementById('result-text');
+
+        // Çark dilimləri (Sənin istədiyin elementlər və ehtimallar)
+        // Qeyd: 0% ehtimallı olanların çarkda görünməsi üçün simvolik pay veririk, amma heç vaxt düşməyəcək şəkildə tənzimləyirik.
+        const sectors = [
+            { label: "Bomba 💥", color: "#ff0055", weight: 95 },
+            { label: "Yenidən 🔄", color: "#9d00ff", weight: 50 },
+            { label: "100 Jeton 🪙", color: "#00f3ff", weight: 0.0001 },
+            { label: "Bomba 💥", color: "#ff1a66", weight: 95 },
+            { label: "5 Jeton 🪙", color: "#00ffcc", weight: 0.0001 },
+            { label: "Yenidən 🔄", color: "#b533ff", weight: 50 },
+            { label: "Bomba 💥", color: "#ff0055", weight: 95 },
+            { label: "20 Jeton 🪙", color: "#ffcc00", weight: 0.0001 },
+            { label: "Bomba 💥", color: "#ff1a66", weight: 95 },
+            { label: "Bomba 💥", color: "#cc0044", weight: 95 }
+        ];
+
+        const totalSectors = sectors.length;
+        const arcSize = (2 * Math.PI) / totalSectors;
+        let startAngle = 0;
+        let isSpinning = false;
+
+        function drawSector(sector, index) {
+            const angle = startAngle + index * arcSize;
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(200, 200, 195, angle, angle + arcSize);
+            ctx.lineTo(200, 200);
+            ctx.fillStyle = sector.color;
+            ctx.fill();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#0b0b16';
+            ctx.stroke();
+
+            // Mətnlərin yerləşdirilməsi
+            ctx.save();
+            ctx.translate(200, 200);
+            ctx.rotate(angle + arcSize / 2);
+            ctx.textAlign = "right";
+            ctx.fillStyle = "#ffffff";
+            ctx.font = "bold 16px Arial";
+            ctx.shadowColor = "rgba(0, 0, 0, 0.8)";
+            ctx.shadowBlur = 4;
+            ctx.fillText(sector.label, 175, 6);
+            ctx.restore();
+            ctx.restore();
+        }
+
+        function drawWheel() {
+            ctx.clearRect(0, 0, 400, 400);
+            sectors.forEach((sector, index) => drawSector(sector, index));
+        }
+
+        // Çəkiyə əsaslanan random seçim (0% şansı olanlar heç vaxt seçilməyəcək)
+        function getRandomSectorIndex() {
+            const validSectors = sectors.map((s, i) => ({ index: i, weight: s.weight })).filter(s => s.weight > 0);
+            const totalWeight = validSectors.reduce((sum, s) => sum + s.weight, 0);
+            let randomNum = Math.random() * totalWeight;
+            
+            for (let s of validSectors) {
+                if (randomNum < s.weight) return s.index;
+                randomNum -= s.weight;
+            }
+            return 0;
+        }
+
+        function spinWheel() {
+            if (isSpinning) return;
+            isSpinning = true;
+            spinBtn.disabled = true;
+
+            const winningIndex = getRandomSectorIndex();
+            
+            // Fırlanma bucağının hesablanması
+            const spins = 5; // Neçə dəfə tam fırlansın
+            const degreesPerSector = 360 / totalSectors;
+            // Çarkın oxu yuxarıdadır (3 saat istiqaməti yox, 12 saat), ona görə uyğunlaşdırırıq
+            const targetAngle = 360 * spins + (360 - (winningIndex * degreesPerSector + degreesPerSector / 2));
+            
+            let currentRotation = 0;
+            const spinDuration = 4000; // 4 saniyə
+            const startTime = performance.now();
+
+            function animateSpin(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / spinDuration, 1);
+                
+                // Ease-out effekti (yavaşlayan hərəkət)
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+                currentRotation = targetAngle * easeOut;
+
+                startAngle = (currentRotation * Math.PI) / 180;
+                drawWheel();
+
+                if (progress < 1) {
+                    requestAnimationFrame(animateSpin);
+                } else {
+                    isSpinning = false;
+                    spinBtn.disabled = false;
+                    showResult(sectors[winningIndex].label);
+                }
+            }
+
+            requestAnimationFrame(animateSpin);
+        }
+
+        function showResult(text) {
+            resultText.innerText = "Nəticə: " + text;
+            resultModal.classList.add('show');
+        }
+
+        function closeModal() {
+            resultModal.classList.remove('show');
+        }
+
+        // İlkin çəkiliş
+        drawWheel();
+
+        // Telegram WebApp genişləndirmə
+        if (window.Telegram && window.Telegram.WebApp) {
+            window.Telegram.WebApp.ready();
+            window.Telegram.WebApp.expand();
+        }
+    </script>
+</body>
+</html>
+
