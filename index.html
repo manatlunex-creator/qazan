@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Neon Çark - Telegram Mini App</title>
-    <!-- Telegram Web App Script -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * {
@@ -27,7 +26,6 @@
             padding-bottom: 20px;
         }
 
-        /* Animasiyalı Arxa Fon (Neon Parıltılar) */
         .bg-animation {
             position: absolute;
             top: 0;
@@ -69,7 +67,6 @@
             100% { transform: translateY(30px) scale(1.1); }
         }
 
-        /* Başlıq */
         header {
             margin-top: 15px;
             text-align: center;
@@ -88,7 +85,6 @@
             margin-bottom: 8px;
         }
 
-        /* Yanıb-sönən Diqqət Çəkən Banner (İri) */
         .prize-banner {
             background: linear-gradient(90deg, rgba(255,0,127,0.3), rgba(0,243,255,0.3), rgba(255,204,0,0.3));
             border: 2px solid #00f3ff;
@@ -118,7 +114,6 @@
             }
         }
 
-        /* Çark Konteyneri */
         .wheel-container {
             position: relative;
             width: 330px;
@@ -150,7 +145,6 @@
             border: 5px solid #1f1b3c;
         }
 
-        /* Fırlat Düyməsi */
         .spin-btn {
             background: linear-gradient(135deg, #ff007f 0%, #7928ca 100%);
             color: white;
@@ -177,7 +171,6 @@
             cursor: not-allowed;
         }
 
-        /* Nəticə pəncərəsi */
         #result-modal {
             position: absolute;
             top: 50%;
@@ -220,37 +213,35 @@
 </head>
 <body>
 
-    <!-- Arxa fon parıltıları -->
     <div class="bg-animation">
         <div class="circle-glow c1"></div>
         <div class="circle-glow c2"></div>
     </div>
 
-    <!-- Başlıq -->
     <header>
         <h1>10 jeton at fırlat qazan</h1>
         <div class="prize-banner">100 Jeton | 50 Jeton | 20 Jeton | 5 Jeton Qazan!</div>
     </header>
 
-    <!-- Çark Bölməsi -->
     <div class="wheel-container">
         <div class="pointer"></div>
         <canvas id="wheel" width="500" height="500"></canvas>
     </div>
 
-    <!-- Fırlat Düyməsi -->
     <button class="spin-btn" id="spinBtn" onclick="spinWheel()">Fırlat</button>
 
-    <!-- Nəticə pəncərəsi -->
     <div id="result-modal">
         <div id="result-text">Təbriklər!</div>
         <button onclick="closeModal()">OK</button>
     </div>
 
     <script>
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let audioCtx = null;
 
         function playSound(type) {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
             }
@@ -294,26 +285,26 @@
         const resultModal = document.getElementById('result-modal');
         const resultText = document.getElementById('result-text');
 
-        // Çark dilimləri və dəqiq ehtimallar
+        // Jetonlar 0, Bombalar ümumi 80%, Yenidən fırlat 20%
         const sectors = [
-            { label: "Bomba 💥", color: "#ff0055", weight: 95 },
-            { label: "Yenidən 🔄", color: "#9d00ff", weight: 50 },
+            { label: "Bomba 💥", color: "#ff0055", weight: 20 },
+            { label: "Yenidən 🔄", color: "#9d00ff", weight: 10 },
             { label: "100 Jeton 🪙", color: "#00f3ff", weight: 0 },
-            { label: "Bomba 💥", color: "#ff1a66", weight: 95 },
+            { label: "Bomba 💥", color: "#ff1a66", weight: 20 },
             { label: "5 Jeton 🪙", color: "#00ffcc", weight: 0 },
-            { label: "Yenidən 🔄", color: "#b533ff", weight: 50 },
+            { label: "Yenidən 🔄", color: "#b533ff", weight: 10 },
             { label: "50 Jeton 🪙", color: "#ffcc00", weight: 0 },
-            { label: "Bomba 💥", color: "#ff0055", weight: 95 },
+            { label: "Bomba 💥", color: "#ff0055", weight: 20 },
             { label: "20 Jeton 🪙", color: "#ff8800", weight: 0 },
-            { label: "Bomba 💥", color: "#cc0044", weight: 95 }
+            { label: "Bomba 💥", color: "#cc0044", weight: 20 }
         ];
 
         const totalSectors = sectors.length;
         const arcSize = (2 * Math.PI) / totalSectors;
-        let currentAngle = 0; // Radiandandır
+        let currentAngle = 0;
         let isSpinning = false;
 
-        function drawWheel(angleOffset = 0) {
+        function drawWheel(angleOffset) {
             ctx.clearRect(0, 0, 500, 500);
             ctx.save();
             ctx.translate(250, 250);
@@ -331,7 +322,6 @@
                 ctx.strokeStyle = '#0b0b16';
                 ctx.stroke();
 
-                // Mətnlərin yerləşdirilməsi
                 ctx.save();
                 ctx.rotate(angle + arcSize / 2);
                 ctx.textAlign = "right";
@@ -347,7 +337,6 @@
             ctx.restore();
         }
 
-        // Çəkiyə əsaslanan random seçim (0% şanslılar heç vaxt seçilməyəcək)
         function getRandomSectorIndex() {
             const validSectors = sectors.map((s, i) => ({ index: i, weight: s.weight })).filter(s => s.weight > 0);
             const totalWeight = validSectors.reduce((sum, s) => sum + s.weight, 0);
@@ -357,7 +346,7 @@
                 if (randomNum < s.weight) return s.index;
                 randomNum -= s.weight;
             }
-            return 0;
+            return validSectors[0].index;
         }
 
         function spinWheel() {
@@ -367,33 +356,29 @@
 
             const winningIndex = getRandomSectorIndex();
             
-            // Hədəf sektorun oxda (yuxarıda, yəni -Math.PI/2 nöqtəsində) dayanması üçün bucaq hesabı
-            const spins = 6;
-            const sectorAngle = 360 / totalSectors;
-            const targetSectorCenter = winningIndex * sectorAngle + sectorAngle / 2;
-            const extraDegrees = 360 - targetSectorCenter;
-            const totalRotationDeg = (360 * spins) + extraDegrees;
-            
-            let startTime = performance.now();
-            let duration = 4000; // 4 saniyə
-            let startAngleDeg = (currentAngle * 180) / Math.PI;
-            let finalAngleDeg = startAngleDeg + totalRotationDeg;
-            let lastTickDeg = startAngleDeg;
+            const spins = 7;
+            const sectorCenterLocal = winningIndex * arcSize + arcSize / 2;
+            const targetAngle = -Math.PI / 2 - sectorCenterLocal + (spins * 2 * Math.PI);
+
+            const startTime = performance.now();
+            const duration = 5000;
+            const startAngle = currentAngle;
+            const totalRotation = targetAngle - startAngle;
+            let lastTickedAngle = startAngle;
 
             function animate(currentTime) {
-                let elapsed = currentTime - startTime;
-                let progress = Math.min(elapsed / duration, 1);
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
                 
-                // Ease-out (yavaşlayan) hərəkət
-                let easeOut = 1 - Math.pow(1 - progress, 3);
-                let currentDeg = startAngleDeg + (finalAngleDeg - startAngleDeg) * easeOut;
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+                const current = startAngle + totalRotation * easeOut;
 
-                if (Math.floor(currentDeg / sectorAngle) !== Math.floor(lastTickDeg / sectorAngle)) {
+                if (Math.abs(current - lastTickedAngle) >= arcSize) {
                     playSound('spin');
-                    lastTickDeg = currentDeg;
+                    lastTickedAngle = current;
                 }
 
-                currentAngle = (currentDeg * Math.PI) / 180;
+                currentAngle = current;
                 drawWheel(currentAngle);
 
                 if (progress < 1) {
@@ -401,7 +386,7 @@
                 } else {
                     isSpinning = false;
                     spinBtn.disabled = false;
-                    currentAngle = (finalAngleDeg % 360) * Math.PI / 180;
+                    currentAngle = targetAngle % (2 * Math.PI);
 
                     const winningLabel = sectors[winningIndex].label;
                     if (winningLabel.includes("Bomba")) {
@@ -426,10 +411,8 @@
             resultModal.classList.remove('show');
         }
 
-        // İlk açılışda çarkı çək
         drawWheel(currentAngle);
 
-        // Telegram WebApp genişləndirmə
         if (window.Telegram && window.Telegram.WebApp) {
             window.Telegram.WebApp.ready();
             window.Telegram.WebApp.expand();
