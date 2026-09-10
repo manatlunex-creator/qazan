@@ -48,16 +48,16 @@
         }
 
         .c1 {
-            width: 250px;
-            height: 250px;
+            width: 300px;
+            height: 300px;
             background: #ff007f;
             top: -50px;
             left: -50px;
         }
 
         .c2 {
-            width: 300px;
-            height: 300px;
+            width: 350px;
+            height: 350px;
             background: #00f3ff;
             bottom: -50px;
             right: -50px;
@@ -69,105 +69,107 @@
             100% { transform: translateY(30px) scale(1.1); }
         }
 
-        /* Başlıq */
+        /* Başlıq - Canlı yayım üçün daha iri və parıltılı */
         header {
-            margin-top: 20px;
+            margin-top: 15px;
             text-align: center;
             z-index: 2;
-            padding: 0 15px;
+            padding: 0 10px;
         }
 
         header h1 {
-            font-size: 20px;
-            font-weight: 700;
+            font-size: 24px;
+            font-weight: 800;
             color: #fff;
-            text-shadow: 0 0 10px rgba(0, 243, 255, 0.7),
-                         0 0 20px rgba(0, 243, 255, 0.5);
+            text-shadow: 0 0 10px rgba(0, 243, 255, 0.8),
+                         0 0 20px rgba(0, 243, 255, 0.6),
+                         0 0 30px rgba(0, 243, 255, 0.4);
             letter-spacing: 1px;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
-        /* Yanıb-sönən Diqqət Çəkən Banner */
+        /* Yanıb-sönən Diqqət Çəkən Banner (İri) */
         .prize-banner {
-            background: linear-gradient(90deg, rgba(255,0,127,0.2), rgba(0,243,255,0.2), rgba(255,204,0,0.2));
+            background: linear-gradient(90deg, rgba(255,0,127,0.3), rgba(0,243,255,0.3), rgba(255,204,0,0.3));
             border: 2px solid #00f3ff;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: bold;
-            letter-spacing: 0.5px;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 15px;
+            font-weight: 900;
+            letter-spacing: 1px;
             text-align: center;
-            box-shadow: 0 0 15px rgba(0, 243, 255, 0.4);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.5);
             animation: pulseBanner 1.5s infinite alternate;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             z-index: 2;
+            text-transform: uppercase;
         }
 
         @keyframes pulseBanner {
             0% {
                 transform: scale(1);
-                box-shadow: 0 0 10px rgba(0, 243, 255, 0.3), inset 0 0 5px rgba(0, 243, 255, 0.3);
+                box-shadow: 0 0 10px rgba(0, 243, 255, 0.4), inset 0 0 5px rgba(0, 243, 255, 0.4);
                 border-color: #00f3ff;
             }
             100% {
-                transform: scale(1.03);
-                box-shadow: 0 0 20px rgba(255, 0, 127, 0.7), inset 0 0 10px rgba(255, 0, 127, 0.5);
+                transform: scale(1.04);
+                box-shadow: 0 0 25px rgba(255, 0, 127, 0.8), inset 0 0 12px rgba(255, 0, 127, 0.6);
                 border-color: #ff007f;
             }
         }
 
-        /* Çark Konteyneri */
+        /* Çark Konteyneri - İriləşdirilib */
         .wheel-container {
             position: relative;
-            width: 270px;
-            height: 270px;
-            margin: 0 auto 20px auto;
+            width: 330px;
+            height: 330px;
+            margin: 0 auto 15px auto;
             z-index: 2;
         }
 
         .pointer {
             position: absolute;
-            top: -18px;
+            top: -22px;
             left: 50%;
             transform: translateX(-50%);
             width: 0;
             height: 0;
-            border-left: 14px solid transparent;
-            border-right: 14px solid transparent;
-            border-top: 26px solid #ff007f;
+            border-left: 16px solid transparent;
+            border-right: 16px solid transparent;
+            border-top: 30px solid #ff007f;
             z-index: 10;
-            filter: drop-shadow(0 0 8px #ff007f);
+            filter: drop-shadow(0 0 10px #ff007f);
         }
 
         canvas {
             width: 100%;
             height: 100%;
             border-radius: 50%;
-            box-shadow: 0 0 25px rgba(0, 243, 255, 0.4),
-                        inset 0 0 15px rgba(255, 0, 127, 0.4);
-            border: 4px solid #1f1b3c;
+            box-shadow: 0 0 30px rgba(0, 243, 255, 0.5),
+                        inset 0 0 20px rgba(255, 0, 127, 0.5);
+            border: 5px solid #1f1b3c;
         }
 
-        /* Fırlat Düyməsi (çox aşağıda deyil) */
+        /* Fırlat Düyməsi (Yuxarıda və böyük) */
         .spin-btn {
             background: linear-gradient(135deg, #ff007f 0%, #7928ca 100%);
             color: white;
             border: none;
-            padding: 12px 40px;
-            font-size: 16px;
-            font-weight: bold;
-            border-radius: 30px;
+            padding: 14px 50px;
+            font-size: 20px;
+            font-weight: 900;
+            border-radius: 35px;
             cursor: pointer;
-            box-shadow: 0 0 20px rgba(255, 0, 127, 0.6);
+            box-shadow: 0 0 25px rgba(255, 0, 127, 0.7);
             transition: 0.2s;
             z-index: 2;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 2px;
         }
 
         .spin-btn:active {
             transform: scale(0.95);
-            box-shadow: 0 0 10px rgba(255, 0, 127, 0.8);
+            box-shadow: 0 0 12px rgba(255, 0, 127, 0.9);
         }
 
         .spin-btn:disabled {
@@ -175,19 +177,19 @@
             cursor: not-allowed;
         }
 
-        /* Nəticə pəncərəsi */
+        /* Nəticə pəncərəsi - İri və oxunaqlı */
         #result-modal {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%) scale(0);
-            background: rgba(18, 18, 35, 0.95);
-            border: 2px solid #00f3ff;
-            padding: 20px 30px;
-            border-radius: 15px;
+            background: rgba(18, 18, 35, 0.96);
+            border: 3px solid #00f3ff;
+            padding: 25px 40px;
+            border-radius: 20px;
             text-align: center;
             z-index: 100;
-            box-shadow: 0 0 30px rgba(0, 243, 255, 0.5);
+            box-shadow: 0 0 40px rgba(0, 243, 255, 0.7);
             transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
@@ -196,20 +198,23 @@
         }
 
         #result-text {
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 15px;
+            font-size: 22px;
+            font-weight: 900;
+            margin-bottom: 20px;
             color: #fff;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
         }
 
         #result-modal button {
             background: #00f3ff;
             color: #0b0b16;
             border: none;
-            padding: 8px 20px;
-            font-weight: bold;
-            border-radius: 8px;
+            padding: 10px 25px;
+            font-size: 16px;
+            font-weight: 900;
+            border-radius: 10px;
             cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.8);
         }
     </style>
 </head>
@@ -230,7 +235,7 @@
     <!-- Çark Bölməsi -->
     <div class="wheel-container">
         <div class="pointer"></div>
-        <canvas id="wheel" width="400" height="400"></canvas>
+        <canvas id="wheel" width="500" height="500"></canvas>
     </div>
 
     <!-- Fırlat Düyməsi -->
@@ -243,7 +248,7 @@
     </div>
 
     <script>
-        // Web Audio API ilə səs generatoru (Xarici fayl yükləməyə ehtiyac qalmır)
+        // Web Audio API ilə səs generatoru
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
         function playSound(type) {
@@ -258,7 +263,6 @@
             const now = audioCtx.currentTime;
 
             if (type === 'spin') {
-                // Fırlanma səsi (qısa klik)
                 osc.type = 'triangle';
                 osc.frequency.setValueAtTime(300, now);
                 gainNode.gain.setValueAtTime(0.1, now);
@@ -266,7 +270,6 @@
                 osc.start(now);
                 osc.stop(now + 0.05);
             } else if (type === 'win') {
-                // Uduş səsi (xoş gələn ikiqat ton)
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(440, now);
                 osc.frequency.setValueAtTime(660, now + 0.1);
@@ -276,7 +279,6 @@
                 osc.start(now);
                 osc.stop(now + 0.5);
             } else if (type === 'bomb') {
-                // Bomba səsi (aşağı tonlu bas/uğursuzluq)
                 osc.type = 'sawtooth';
                 osc.frequency.setValueAtTime(120, now);
                 osc.frequency.linearRampToValueAtTime(40, now + 0.4);
@@ -293,7 +295,7 @@
         const resultModal = document.getElementById('result-modal');
         const resultText = document.getElementById('result-text');
 
-        // Çark dilimləri (Sənin tələb etdiyin ehtimallar və 50 jeton əlavə olunmuş versiya)
+        // Çark dilimləri və ehtimallar
         const sectors = [
             { label: "Bomba 💥", color: "#ff0055", weight: 95 },
             { label: "Yenidən 🔄", color: "#9d00ff", weight: 50 },
@@ -301,50 +303,54 @@
             { label: "Bomba 💥", color: "#ff1a66", weight: 95 },
             { label: "5 Jeton 🪙", color: "#00ffcc", weight: 0 },
             { label: "Yenidən 🔄", color: "#b533ff", weight: 50 },
-            { label: "50 Jeton 🪙", color: "#ffcc00", weight: 0 }, // Yeni əlavə olunan 50 jeton (0% şans)
+            { label: "50 Jeton 🪙", color: "#ffcc00", weight: 0 },
             { label: "Bomba 💥", color: "#ff0055", weight: 95 },
             { label: "20 Jeton 🪙", color: "#ff8800", weight: 0 },
-            { label: "Bomba 💥", color: "#cc0044", weight: 95 },
-            { label: "Bomba 💥", color: "#ff1a66", weight: 95 }
+            { label: "Bomba 💥", color: "#cc0044", weight: 95 }
         ];
 
         const totalSectors = sectors.length;
         const arcSize = (2 * Math.PI) / totalSectors;
-        let startAngle = 0;
+        let currentAngle = 0; // Ümumi fırlanma bucağı
         let isSpinning = false;
 
         function drawSector(sector, index) {
-            const angle = startAngle + index * arcSize;
+            const angle = index * arcSize;
             ctx.save();
             ctx.beginPath();
-            ctx.arc(200, 200, 195, angle, angle + arcSize);
-            ctx.lineTo(200, 200);
+            ctx.arc(250, 250, 240, angle, angle + arcSize);
+            ctx.lineTo(250, 250);
             ctx.fillStyle = sector.color;
             ctx.fill();
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 3;
             ctx.strokeStyle = '#0b0b16';
             ctx.stroke();
 
-            // Mətnlərin yerləşdirilməsi
+            // İri və oxunaqlı mətnlər
             ctx.save();
-            ctx.translate(200, 200);
+            ctx.translate(250, 250);
             ctx.rotate(angle + arcSize / 2);
             ctx.textAlign = "right";
             ctx.fillStyle = "#ffffff";
-            ctx.font = "bold 15px Arial";
-            ctx.shadowColor = "rgba(0, 0, 0, 0.8)";
-            ctx.shadowBlur = 4;
-            ctx.fillText(sector.label, 175, 6);
+            ctx.font = "bold 20px Arial";
+            ctx.shadowColor = "rgba(0, 0, 0, 0.9)";
+            ctx.shadowBlur = 6;
+            ctx.fillText(sector.label, 215, 8);
             ctx.restore();
             ctx.restore();
         }
 
-        function drawWheel() {
-            ctx.clearRect(0, 0, 400, 400);
+        function drawWheel(rotation = 0) {
+            ctx.clearRect(0, 0, 500, 500);
+            ctx.save();
+            ctx.translate(250, 250);
+            ctx.rotate(rotation);
+            ctx.translate(-250, -250);
             sectors.forEach((sector, index) => drawSector(sector, index));
+            ctx.restore();
         }
 
-        // Çəkiyə əsaslanan random seçim (0% şanslılar heç vaxt seçilməyəcək)
+        // Çəkiyə əsaslanan random seçim
         function getRandomSectorIndex() {
             const validSectors = sectors.map((s, i) => ({ index: i, weight: s.weight })).filter(s => s.weight > 0);
             const totalWeight = validSectors.reduce((sum, s) => sum + s.weight, 0);
@@ -364,37 +370,42 @@
 
             const winningIndex = getRandomSectorIndex();
             
-            const spins = 5; 
-            const degreesPerSector = 360 / totalSectors;
-            const targetAngle = 360 * spins + (360 - (winningIndex * degreesPerSector + degreesPerSector / 2));
+            // Dəqiq ox hesablama məntiqi (Yuxarıdakı ox 270 dərəcə / -Math.PI/2 nöqtəsinə uyğundur)
+            const spins = 6;
+            const sectorAngleDeg = 360 / totalSectors;
             
-            let currentRotation = 0;
-            const spinDuration = 4000; 
-            const startTime = performance.now();
-            let lastTickRotation = 0;
+            // Hədəf sektorun mərkəz bucağı
+            const targetSectorCenterDeg = winningIndex * sectorAngleDeg + sectorAngleDeg / 2;
+            const extraDegrees = 360 - targetSectorCenterDeg;
+            const totalTargetDegrees = currentAngle + (360 * spins) + extraDegrees;
 
-            function animateSpin(currentTime) {
-                const elapsed = currentTime - startTime;
-                const progress = Math.min(elapsed / spinDuration, 1);
+            let startTime = performance.now();
+            let duration = 4000; // 4 saniyə
+            let lastTickAngle = currentAngle;
+
+            function animate(currentTime) {
+                let elapsed = currentTime - startTime;
+                let progress = Math.min(elapsed / duration, 1);
                 
-                const easeOut = 1 - Math.pow(1 - progress, 3);
-                currentRotation = targetAngle * easeOut;
+                // Smooth ease-out
+                let easeOut = 1 - Math.pow(1 - progress, 3);
+                let currentDeg = currentAngle + (totalTargetDegrees - currentAngle) * easeOut;
 
-                // Hər sektoru keçəndə klik səsi çalmaq üçün
-                if (Math.floor(currentRotation / degreesPerSector) !== Math.floor(lastTickRotation / degreesPerSector)) {
+                // Səs effekti üçün hər dilim keçəndə yoxlama
+                if (Math.floor(currentDeg / sectorAngleDeg) !== Math.floor(lastTickAngle / sectorAngleDeg)) {
                     playSound('spin');
-                    lastTickRotation = currentRotation;
+                    lastTickAngle = currentDeg;
                 }
 
-                startAngle = (currentRotation * Math.PI) / 180;
-                drawWheel();
+                drawWheel((currentDeg * Math.PI) / 180);
 
                 if (progress < 1) {
-                    requestAnimationFrame(animateSpin);
+                    requestAnimationFrame(animate);
                 } else {
+                    currentAngle = totalTargetDegrees % 360;
                     isSpinning = false;
                     spinBtn.disabled = false;
-                    
+
                     const winningLabel = sectors[winningIndex].label;
                     if (winningLabel.includes("Bomba")) {
                         playSound('bomb');
@@ -406,7 +417,7 @@
                 }
             }
 
-            requestAnimationFrame(animateSpin);
+            requestAnimationFrame(animate);
         }
 
         function showResult(text) {
@@ -418,7 +429,8 @@
             resultModal.classList.remove('show');
         }
 
-        drawWheel();
+        // İlkin çəkiliş
+        drawWheel(0);
 
         // Telegram WebApp genişləndirmə
         if (window.Telegram && window.Telegram.WebApp) {
