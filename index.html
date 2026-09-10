@@ -148,6 +148,7 @@
             box-shadow: 0 0 30px rgba(0, 243, 255, 0.5),
                         inset 0 0 20px rgba(255, 0, 127, 0.5);
             border: 5px solid #1f1b3c;
+            transition: transform 4s cubic-bezier(0.15, 0.85, 0.35, 1);
         }
 
         /* Fırlat Düyməsi */
@@ -248,7 +249,6 @@
     </div>
 
     <script>
-        // Web Audio API ilə səs generatoru
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
         function playSound(type) {
@@ -311,21 +311,19 @@
 
         const totalSectors = sectors.length;
         const arcSize = (2 * Math.PI) / totalSectors;
-        let currentAngle = 0;
+        let currentRotation = 0;
         let isSpinning = false;
 
+        // Çarkı bir dəfə statik olaraq yuxarıdan (-90 dərəcə) başlayaraq çəkirik
         function drawWheel() {
             ctx.clearRect(0, 0, 500, 500);
-            ctx.save();
-            ctx.translate(250, 250);
-            ctx.rotate(currentAngle);
-            ctx.translate(-250, -250);
-
             sectors.forEach((sector, index) => {
-                const angle = index * arcSize;
+                const angle = index * arcSize - Math.PI / 2;
+                const nextAngle = (index + 1) * arcSize - Math.PI / 2;
+
                 ctx.save();
                 ctx.beginPath();
-                ctx.arc(250, 250, 240, angle, angle + arcSize);
+                ctx.arc(250, 250, 240, angle, nextAngle);
                 ctx.lineTo(250, 250);
                 ctx.fillStyle = sector.color;
                 ctx.fill();
@@ -333,7 +331,7 @@
                 ctx.strokeStyle = '#0b0b16';
                 ctx.stroke();
 
-                // Mətnlərin çəkilməsi
+                // Mətnlərin yerləşdirilməsi
                 ctx.save();
                 ctx.translate(250, 250);
                 ctx.rotate(angle + arcSize / 2);
@@ -346,11 +344,9 @@
                 ctx.restore();
                 ctx.restore();
             });
-
-            ctx.restore();
         }
 
-        // Çəkiyə əsaslanan random seçim (0% şanslılar heç vaxt çıxmayacaq)
+        // Çəkiyə əsaslanan random seçim
         function getRandomSectorIndex() {
             const validSectors = sectors.map((s, i) => ({ index: i, weight: s.weight })).filter(s => s.weight > 0);
             const totalWeight = validSectors.reduce((sum, s) => sum + s.weight, 0);
@@ -369,56 +365,31 @@
             spinBtn.disabled = true;
 
             const winningIndex = getRandomSectorIndex();
-            
-            // Dəqiq ox hesablama (Ox yuxarıdadır, yəni -90 dərəcə / 3 torpaq)
             const sectorAngleDeg = 360 / totalSectors;
+            
             const spins = 6;
+            const sectorCenterDeg = winningIndex * sectorAngleDeg + sectorAngleDeg / 2;
             
-            // Hədəf sektorun mərkəzini yuxarıdakı oxa gətirmək üçün riyazi hesab
-            const targetDegree = 360 - (winningIndex * sectorAngleDeg + sectorAngleDeg / 2);
-            const totalRotationDeg = (360 * spins) + targetDegree;
-            
-            let startTime = performance.now();
-            let duration = 4000; // 4 saniyə
-            let startRotDeg = (currentAngle * 180) / Math.PI;
-            let finalRotDeg = startRotDeg + totalRotationDeg;
-            let lastTickDeg = startRotDeg;
+            // Dəqiq oxa oturtmaq üçün hədəf bucaq hesablanması
+            const targetRotation = currentRotation + (360 * spins) + (360 - (sectorCenterDeg % 360));
+            currentRotation = targetRotation;
 
-            function animate(currentTime) {
-                let elapsed = currentTime - startTime;
-                let progress = Math.min(elapsed / duration, 1);
-                
-                // Ease-out (yavaşlayan) animasiya
-                let easeOut = 1 - Math.pow(1 - progress, 3);
-                let currentDeg = startRotDeg + (finalRotDeg - startRotDeg) * easeOut;
+            canvas.style.transform = `rotate(${currentRotation}deg)`;
+            playSound('spin');
 
-                if (Math.floor(currentDeg / sectorAngleDeg) !== Math.floor(lastTickDeg / sectorAngleDeg)) {
-                    playSound('spin');
-                    lastTickDeg = currentDeg;
-                }
+            setTimeout(() => {
+                isSpinning = false;
+                spinBtn.disabled = false;
 
-                currentAngle = (currentDeg * Math.PI) / 180;
-                drawWheel();
-
-                if (progress < 1) {
-                    requestAnimationFrame(animate);
+                const winningLabel = sectors[winningIndex].label;
+                if (winningLabel.includes("Bomba")) {
+                    playSound('bomb');
                 } else {
-                    isSpinning = false;
-                    spinBtn.disabled = false;
-                    currentAngle = (finalRotDeg % 360) * Math.PI / 180;
-
-                    const winningLabel = sectors[winningIndex].label;
-                    if (winningLabel.includes("Bomba")) {
-                        playSound('bomb');
-                    } else {
-                        playSound('win');
-                    }
-                    
-                    showResult(winningLabel);
+                    playSound('win');
                 }
-            }
-
-            requestAnimationFrame(animate);
+                
+                showResult(winningLabel);
+            }, 4000);
         }
 
         function showResult(text) {
@@ -430,7 +401,7 @@
             resultModal.classList.remove('show');
         }
 
-        // İlkin çəkiliş
+        // İlk açılışda çarkı çək
         drawWheel();
 
         // Telegram WebApp genişləndirmə
