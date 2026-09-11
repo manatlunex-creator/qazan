@@ -5,15 +5,25 @@
     <title>Admin Panel</title>
     <style>
         body { background: #121212; color: #fff; font-family: Arial; padding: 20px; }
-        .login-box, .admin-panel { max-width: 800px; margin: 0 auto; background: #1e1e1e; padding: 20px; border-radius: 8px; }
+        .login-box, .admin-panel { max-width: 900px; margin: 0 auto; background: #1e1e1e; padding: 20px; border-radius: 8px; }
         input, button { padding: 8px; margin: 5px 0; width: 100%; box-sizing: border-box; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { border: 1px solid #444; padding: 8px; text-align: left; font-size: 13px; }
+        th, td { border: 1px solid #444; padding: 10px; text-align: left; font-size: 13px; vertical-align: top; }
         th { background: #333; }
-        .btn-danger { background: #ff4444; color: #fff; border: none; cursor: pointer; padding: 5px 10px; }
-        .btn-warning { background: #ffbb33; color: #000; border: none; cursor: pointer; padding: 5px 10px; }
+        .btn-danger { background: #ff4444; color: #fff; border: none; cursor: pointer; padding: 6px; }
+        .btn-warning { background: #ffbb33; color: #000; border: none; cursor: pointer; padding: 6px; }
         .btn-success { background: #00C851; color: #fff; border: none; cursor: pointer; }
-        .btn-info { background: #33b5e5; color: #fff; border: none; cursor: pointer; padding: 5px 10px; }
+        .btn-info { background: #33b5e5; color: #fff; border: none; cursor: pointer; padding: 6px; }
+        
+        .admin-chat-box {
+            background: #111;
+            border: 1px solid #444;
+            height: 100px;
+            overflow-y: auto;
+            padding: 5px;
+            margin-bottom: 5px;
+            font-size: 11px;
+        }
     </style>
 </head>
 <body>
@@ -26,7 +36,7 @@
     </div>
 
     <div id="panelSection" class="admin-panel" style="display:none;">
-        <h3>Admin Panel - İdarəetmə</h3>
+        <h3>Admin Panel - Canlı Dəstək və İdarəetmə</h3>
         
         <div>
             <h4>Yeni Kod Yarat</h4>
@@ -36,18 +46,17 @@
 
         <hr style="border-color: #444; margin: 20px 0;">
 
-        <h4>Daxil olan Sorğular və İstifadəçi Nömrələri</h4>
+        <h4>Daxil olan Sorğular və İstifadəçi Söhbətləri</h4>
         <table>
             <thead>
                 <tr>
-                    <th>Kod</th>
-                    <th>Nömrə</th>
-                    <th>Cavab Yaz / Chat</th>
+                    <th>Kod / Nömrə</th>
+                    <th>Canlı Chat (Dəstək)</th>
                     <th>Əməliyyatlar</th>
                 </tr>
             </thead>
             <tbody id="requestsTable">
-                <!-- Sorğular burada görünəcək -->
+                <!-- Sorğular və chatlar burada görünəcək -->
             </tbody>
         </table>
 
@@ -117,7 +126,7 @@
 
                     let row = `<tr>
                         <td><b>${codeKey}</b></td>
-                        <td>${data.banned ? 'Banlanıb' : 'Aktiv'}</td>
+                        <td>${data.banned ? 'Banlanıب' : 'Aktiv'}</td>
                         <td>
                             <button class="btn-warning" onclick="toggleBan('${codeKey}', ${data.banned})">${data.banned ? 'Banı Aç' : 'Banla'}</button>
                             <button class="btn-danger" onclick="deleteCode('${codeKey}')">Sil</button>
@@ -137,34 +146,51 @@
                     const codeKey = childSnapshot.key;
 
                     let row = `<tr>
-                        <td><b>${data.code}</b></td>
-                        <td>${data.phone}</td>
+                        <td><b>Kod:</b> ${data.code}<br><b>Nömrə:</b> ${data.phone}</td>
                         <td>
-                            <input type="text" id="reply_${codeKey}" placeholder="Cavab yazın...">
-                            <button class="btn-info" onclick="sendReply('${codeKey}')">Göndər</button>
-                            <button class="btn-warning" onclick="closeChat('${codeKey}')" style="margin-top:5px;">Chatı Bağla</button>
+                            <div class="admin-chat-box" id="adminChat_${codeKey}">
+                                <i style="color:#777;">Yüklənir...</i>
+                            </div>
+                            <input type="text" id="reply_${codeKey}" placeholder="Mesaj yazın...">
+                            <button class="btn-info" onclick="sendAdminMessage('${codeKey}')">Cavab Göndər</button>
                         </td>
                         <td>
-                            <button class="btn-danger" onclick="banAndRemove('${codeKey}')">Hesabı Banla</button>
+                            <button class="btn-warning" onclick="closeChat('${codeKey}')">Chatı Bağla</button>
+                            <button class="btn-danger" onclick="banAndRemove('${codeKey}')" style="margin-top:5px;">Banla & Sil</button>
                         </td>
                     </tr>`;
                     tbody.innerHTML += row;
+
+                    // Hər istifadəçinin chat mesajlarını admin paneldə oxumaq
+                    db.ref("chats/" + codeKey).on("value", chatSnap => {
+                        const chatBox = document.getElementById("adminChat_" + codeKey);
+                        if (!chatBox) return;
+                        chatBox.innerHTML = "";
+                        if (chatSnap.exists()) {
+                            chatSnap.forEach(msgChild => {
+                                const msg = msgChild.val();
+                                chatBox.innerHTML += `<div><b>${msg.sender}:</b> ${msg.text}</div>`;
+                            });
+                            chatBox.scrollTop = chatBox.scrollHeight;
+                        } else {
+                            chatBox.innerHTML = `<i style="color:#777;">Mesaj yoxdur</i>`;
+                        }
+                    });
                 });
             });
         }
 
-        function sendReply(codeKey) {
-            const replyText = document.getElementById("reply_" + codeKey).value.trim();
-            if (!replyText) return;
+        function sendAdminMessage(codeKey) {
+            const text = document.getElementById("reply_" + codeKey).value.trim();
+            if (!text) return;
 
             db.ref("chats/" + codeKey).push({
                 sender: "Admin",
-                text: replyText,
+                text: text,
                 timestamp: Date.now()
             });
 
             document.getElementById("reply_" + codeKey).value = "";
-            alert("Cavab göndərildi!");
         }
 
         function closeChat(codeKey) {
