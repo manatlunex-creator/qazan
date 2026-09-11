@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Panel</title>
+    <style>
+        body { background: #121212; color: #fff; font-family: Arial; padding: 20px; }
+        .login-box, .admin-panel { max-width: 600px; margin: 0 auto; background: #1e1e1e; padding: 20px; border-radius: 8px; }
+        input, button { padding: 8px; margin: 5px 0; width: 100%; box-sizing: border-box; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #444; padding: 8px; text-align: left; font-size: 14px; }
+        th { background: #333; }
+        .btn-danger { background: #ff4444; color: #fff; border: none; cursor: pointer; }
+        .btn-success { background: #00C851; color: #fff; border: none; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div id="loginSection" class="login-box">
+        <h3>Admin Girişi</h3>
+        <input type="text" id="username" placeholder="İstifadəçi adı">
+        <input type="password" id="password" placeholder="Şifrə">
+        <button onclick="adminLogin()">Daxil ol</button>
+    </div>
+
+    <div id="panelSection" class="admin-panel" style="display:none;">
+        <h3>Admin Panel - İdarəetmə</h3>
+        
+        <div>
+            <h4>Yeni Kod Yarat</h4>
+            <input type="text" id="newCodeInput" placeholder="4 rəqəmli kod yazın" maxlength="4">
+            <button class="btn-success" onclick="createCode()">Kod Əlavə Et</button>
+        </div>
+
+        <hr style="border-color: #444; margin: 20px 0;">
+
+        <h4>Daxil olan Sorğular və İstifadəçilər</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Kod</th>
+                    <th>Nömrə</th>
+                    <th>Əməliyyatlar</th>
+                </tr>
+            Ref</thead>
+            <tbody id="requestsTable">
+                <!-- Real vaxtda dolacaq -->
+            </tbody>
+        </table>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            databaseURL: "https://ahhseks-default-rtdb.europe-west1.firebasedatabase.app/"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        function adminLogin() {
+            const user = document.getElementById("username").value;
+            const pass = document.getElementById("password").value;
+
+            if (user === "K9ESCOBAR211_" && pass === "AA555_67") {
+                document.getElementById("loginSection").style.display = "none";
+                document.getElementById("panelSection").style.display = "block";
+                loadRequests();
+            } else {
+                alert("İstifadəçi adı və ya şifrə səhvdir!");
+            }
+        }
+
+        function createCode() {
+            const code = document.getElementById("newCodeInput").value;
+            if (code.length === 4) {
+                db.ref("codes/" + code).set({
+                    active: true,
+                    banned: false
+                }, (error) => {
+                    if (!error) {
+                        alert("Kod uğurla yaradıldı!");
+                        document.getElementById("newCodeInput").value = "";
+                    }
+                });
+            } else {
+                alert("Kod 4 rəqəmli olmalıdır.");
+            }
+        }
+
+        function loadRequests() {
+            const tbody = document.getElementById("requestsTable");
+            db.ref("requests").on("value", snapshot => {
+                tbody.innerHTML = "";
+                snapshot.forEach(childSnapshot => {
+                    const data = childSnapshot.val();
+                    const codeKey = childSnapshot.key;
+
+                    let row = `<tr>
+                        <td>${data.code}</td>
+                        <td>${data.phone}</td>
+                        <td>
+                            <button class="btn-danger" onclick="banUser('${codeKey}')">Banla / Sil</button>
+                        </td>
+                    </tr>`;
+                    tbody.innerHTML += row;
+                });
+            });
+        }
+
+        function banUser(codeKey) {
+            // Kodun aktivliyini söndürür və ya silir
+            db.ref("codes/" + codeKey).update({ banned: true, active: false });
+            db.ref("requests/" + codeKey).remove();
+            alert("İstifadəçi banlandı və sorğu silindi.");
+        }
+    </script>
+</body>
+</html>
+
