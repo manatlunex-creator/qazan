@@ -78,12 +78,10 @@
         </div>
     </div>
 
-    <!-- Firebase SDK (Modular olmayan CDN versiyası) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <script>
-        // Firebase Konfiqurasiyası
         const firebaseConfig = {
             databaseURL: "https://ahhseks-default-rtdb.europe-west1.firebasedatabase.app/"
         };
@@ -93,26 +91,28 @@
         let currentCode = "";
 
         function checkCode() {
-            const code = document.getElementById("accessCode").value;
+            const code = document.getElementById("accessCode").value.trim();
             if (code.length !== 4) {
                 alert("Zəhmət olmasa 4 rəqəmli kodu tam daxil edin.");
                 return;
             }
 
-            // Bazadan kodun mövcudluğunu və ban statusunu yoxla
             db.ref("codes/" + code).once("value", snapshot => {
                 const data = snapshot.val();
-                if (data && data.active) {
-                    if (data.banned) {
-                        alert("Bu kod banlanıb!");
+                if (data) {
+                    if (data.banned || data.active === false) {
+                        alert("Bu kod banlanıb və ya qüvvədən düşüb!");
                         return;
                     }
                     currentCode = code;
                     document.getElementById("step1").style.display = "none";
                     document.getElementById("step2").style.display = "block";
                 } else {
-                    alert("Yanlış və ya qüvvədən düşmüş kod!");
+                    alert("Yanlış və ya mövcud olmayan kod!");
                 }
+            }, error => {
+                console.error(error);
+                alert("Baza bağlantısında xəta baş verdi.");
             });
         }
 
@@ -134,21 +134,17 @@
         function submitData() {
             const fullPhone = countrySelect.value + phoneInput.value.trim();
             
-            // Məlumatı Firebase-ə yaz
             db.ref("requests/" + currentCode).set({
                 code: currentCode,
                 phone: fullPhone,
                 timestamp: Date.now()
             });
 
-            // Tələb olunduğu kimi ekranı "işləm aparılır" vəziyyətində saxlayırıq
             startBtn.disabled = true;
             countrySelect.disabled = true;
             phoneInput.disabled = true;
-            document.getElementById("statusMsginnerText = "İşlem aparılır...";
             document.getElementById("statusMsg").innerText = "İşlem aparılır...";
         }
     </script>
 </body>
 </html>
-
