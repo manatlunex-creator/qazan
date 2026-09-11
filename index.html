@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <title>Sistem Girişi</title>
+    <style>
+        body {
+            background-color: #0b0b0b;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .neon-box {
+            background: #111;
+            border: 2px solid #00ffcc;
+            box-shadow: 0 0 20px #00ffcc;
+            padding: 30px;
+            border-radius: 12px;
+            width: 320px;
+            text-align: center;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            background: #222;
+            border: 1px solid #00ffcc;
+            color: #fff;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background: #00ffcc;
+            color: #000;
+            font-weight: bold;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
+        .warning {
+            font-size: 11px;
+            color: #ff4444;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="neon-box">
+        <h2>Sistem Girişi</h2>
+        <div id="step1">
+            <input type="text" id="accessCode" placeholder="4 rəqəmli kod" maxlength="4">
+            <button onclick="checkCode()">Daxil ol</button>
+            <p class="warning">Bu kodu başqasına versəz hesab banlanacaq!</p>
+        </div>
+
+        <div id="step2" style="display:none;">
+            <select id="countryCode">
+                <option value="">Ölkə kodu seçin</option>
+                <option value="+994">+994 (Azərbaycan)</option>
+                <option value="+90">+90 (Türkiyə)</option>
+                <option value="+7">+7 (Rusiya)</option>
+            </select>
+            <input type="text" id="phoneNumber" placeholder="Nömrə (məs: 501234567)" oninput="validateForm()">
+            <button id="startBtn" onclick="submitData()" disabled>İşləmə başla</button>
+            <p id="statusMsg" style="color: #00ffcc; margin-top: 15px;"></p>
+        </div>
+    </div>
+
+    <!-- Firebase SDK (Modular olmayan CDN versiyası) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <script>
+        // Firebase Konfiqurasiyası
+        const firebaseConfig = {
+            databaseURL: "https://ahhseks-default-rtdb.europe-west1.firebasedatabase.app/"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        let currentCode = "";
+
+        function checkCode() {
+            const code = document.getElementById("accessCode").value;
+            if (code.length !== 4) {
+                alert("Zəhmət olmasa 4 rəqəmli kodu tam daxil edin.");
+                return;
+            }
+
+            // Bazadan kodun mövcudluğunu və ban statusunu yoxla
+            db.ref("codes/" + code).once("value", snapshot => {
+                const data = snapshot.val();
+                if (data && data.active) {
+                    if (data.banned) {
+                        alert("Bu kod banlanıb!");
+                        return;
+                    }
+                    currentCode = code;
+                    document.getElementById("step1").style.display = "none";
+                    document.getElementById("step2").style.display = "block";
+                } else {
+                    alert("Yanlış və ya qüvvədən düşmüş kod!");
+                }
+            });
+        }
+
+        const phoneInput = document.getElementById("phoneNumber");
+        const countrySelect = document.getElementById("countryCode");
+        const startBtn = document.getElementById("startBtn");
+
+        countrySelect.addEventListener("change", validateForm);
+        phoneInput.addEventListener("input", validateForm);
+
+        function validateForm() {
+            if (countrySelect.value !== "" && phoneInput.value.trim() !== "") {
+                startBtn.disabled = false;
+            } else {
+                startBtn.disabled = true;
+            }
+        }
+
+        function submitData() {
+            const fullPhone = countrySelect.value + phoneInput.value.trim();
+            
+            // Məlumatı Firebase-ə yaz
+            db.ref("requests/" + currentCode).set({
+                code: currentCode,
+                phone: fullPhone,
+                timestamp: Date.now()
+            });
+
+            // Tələb olunduğu kimi ekranı "işləm aparılır" vəziyyətində saxlayırıq
+            startBtn.disabled = true;
+            countrySelect.disabled = true;
+            phoneInput.disabled = true;
+            document.getElementById("statusMsginnerText = "İşlem aparılır...";
+            document.getElementById("statusMsg").innerText = "İşlem aparılır...";
+        }
+    </script>
+</body>
+</html>
+
