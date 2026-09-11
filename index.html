@@ -20,7 +20,7 @@
             background: #121212;
             border: 2px solid #00ffcc;
             box-shadow: 0 0 25px rgba(0, 255, 204, 0.4);
-            padding: 35px;
+            padding: 25px;
             border-radius: 15px;
             width: 360px;
             text-align: center;
@@ -28,13 +28,14 @@
         }
         h2 {
             color: #00ffcc;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             text-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
+            font-size: 20px;
         }
         input, select {
             width: 100%;
-            padding: 12px;
-            margin: 10px 0;
+            padding: 10px;
+            margin: 8px 0;
             background: #1a1a1a;
             border: 1px solid #00ffcc;
             color: #fff;
@@ -45,15 +46,15 @@
         }
         button {
             width: 100%;
-            padding: 12px;
+            padding: 10px;
             background: #00ffcc;
             color: #000;
             font-weight: bold;
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            margin-top: 10px;
-            font-size: 15px;
+            margin-top: 8px;
+            font-size: 14px;
             box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
         }
         button:disabled {
@@ -65,24 +66,33 @@
         .warning {
             font-size: 11px;
             color: #ff4444;
-            margin-top: 15px;
+            margin-top: 10px;
             line-height: 1.4;
         }
         #statusMsg {
-            font-size: 15px;
+            font-size: 14px;
             font-weight: bold;
             color: #00ffcc;
-            margin-top: 15px;
+            margin-top: 10px;
             text-shadow: 0 0 8px rgba(0, 255, 204, 0.4);
         }
-        .chat-box {
+        .chat-container {
             margin-top: 15px;
             text-align: left;
             border-top: 1px solid #333;
             padding-top: 10px;
-            max-height: 120px;
+        }
+        .chat-messages {
+            max-height: 100px;
             overflow-y: auto;
-            font-size: 13px;
+            font-size: 12px;
+            background: #191919;
+            padding: 8px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+        .chat-messages p {
+            margin: 4px 0;
         }
     </style>
 </head>
@@ -91,14 +101,14 @@
     <div class="neon-box">
         <h2>Sistem Girişi</h2>
         
-        <!-- 1-ci Addım: Kod -->
+        <!-- 1-ci Addım: Kod Girişi -->
         <div id="step1">
             <input type="text" id="accessCode" placeholder="4 rəqəmli kodu daxil edin" maxlength="4">
             <button onclick="checkCode()">Daxil ol</button>
             <p class="warning">Bu kodu başqasına versəz hesab banlanacaq!</p>
         </div>
 
-        <!-- 2-ci Addım: Nömrə və Müraciət -->
+        <!-- 2-ci Addım: Nömrə və Söhbət -->
         <div id="step2" style="display:none;">
             <select id="countryCode">
                 <option value="">Ölkə kodu seçin</option>
@@ -110,11 +120,13 @@
             <button id="startBtn" onclick="submitData()" disabled>İşləmə başla</button>
             <p id="statusMsg"></p>
 
-            <!-- Admindən gələn mesajlar / cavablar -->
-            <div id="adminResponseArea" style="display:none;">
-                <div class="chat-box" id="chatMessages">
+            <!-- Adminlə əlaqə / Chat sahəsi -->
+            <div id="chatSection" class="chat-container" style="display:none;">
+                <div class="chat-messages" id="chatMessages">
                     <p style="color: #888;">Admindən cavab gözlənilir...</p>
                 </div>
+                <input type="text" id="userMessage" placeholder="Adminə mesaj yazın...">
+                <button onclick="sendUserMessage()">Adminə Göndər</button>
             </div>
         </div>
     </div>
@@ -172,21 +184,20 @@
         function submitData() {
             const fullPhone = countrySelect.value + phoneInput.value.trim();
             
-            // Sorğunu və nömrəni Firebase-ə yazırıq (Admin görəcək)
             db.ref("requests/" + currentCode).set({
                 code: currentCode,
                 phone: fullPhone,
                 timestamp: Date.now()
             });
 
-            // Kurs tələbinə uyğun olaraq ekran "işləm aparılır" yazısında qalır
+            // Ekran tələb olunduğu kimi "işləm aparılır" vəziyyətində qalır
             startBtn.disabled = true;
             countrySelect.disabled = true;
             phoneInput.disabled = true;
             document.getElementById("statusMsg").innerText = "İşləm aparılır...";
-            document.getElementById("adminResponseArea").style.display = "block";
+            document.getElementById("chatSection").style.display = "block";
 
-            // Admindən gələn cavabları dinləyirik
+            // Mesajları dinlə (Həm adminin, həm istifadəçinin mesajları)
             db.ref("chats/" + currentCode).on("value", snapshot => {
                 const chatDiv = document.getElementById("chatMessages");
                 chatDiv.innerHTML = "";
@@ -195,16 +206,33 @@
                         const msg = child.val();
                         chatDiv.innerHTML += `<p><b>${msg.sender}:</b> ${msg.text}</p>`;
                     });
+                    chatDiv.scrollTop = chatDiv.scrollHeight;
+                } else {
+                    chatDiv.innerHTML = `<p style="color: #888;">Söhbətə başla...</p>`;
                 }
             });
 
-            // Ban statusunu yoxla (əgər admin banlasa)
+            // Ban yoxlanışı
             db.ref("codes/" + currentCode + "/banned").on("value", snapshot => {
                 if (snapshot.val() === true) {
                     alert("Hesabınız banlandı!");
                     location.reload();
                 }
             });
+        }
+
+        function sendUserMessage() {
+            const msgInput = document.getElementById("userMessage");
+            const text = msgInput.value.trim();
+            if (!text) return;
+
+            db.ref("chats/" + currentCode).push({
+                sender: "İstifadəçi",
+                text: text,
+                timestamp: Date.now()
+            });
+
+            msgInput.value = "";
         }
     </script>
 </body>
