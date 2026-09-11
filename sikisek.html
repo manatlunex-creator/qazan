@@ -5,12 +5,13 @@
     <title>Admin Panel</title>
     <style>
         body { background: #121212; color: #fff; font-family: Arial; padding: 20px; }
-        .login-box, .admin-panel { max-width: 600px; margin: 0 auto; background: #1e1e1e; padding: 20px; border-radius: 8px; }
+        .login-box, .admin-panel { max-width: 700px; margin: 0 auto; background: #1e1e1e; padding: 20px; border-radius: 8px; }
         input, button { padding: 8px; margin: 5px 0; width: 100%; box-sizing: border-box; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { border: 1px solid #444; padding: 8px; text-align: left; font-size: 14px; }
         th { background: #333; }
-        .btn-danger { background: #ff4444; color: #fff; border: none; cursor: pointer; }
+        .btn-danger { background: #ff4444; color: #fff; border: none; cursor: pointer; padding: 5px; }
+        .btn-warning { background: #ffbb33; color: #000; border: none; cursor: pointer; padding: 5px; }
         .btn-success { background: #00C851; color: #fff; border: none; cursor: pointer; }
     </style>
 </head>
@@ -34,17 +35,31 @@
 
         <hr style="border-color: #444; margin: 20px 0;">
 
-        <h4>Daxil olan Sorğular və İstifadəçilər</h4>
+        <h4>Yaradılmış Kodlar və Statuslar</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Kod</th>
+                    <th>Status</th>
+                    <th>Əməliyyatlar</th>
+                </tr>
+            </thead>
+            <tbody id="codesTable">
+                <!-- Kodlar burada görünəcək -->
+            </tbody>
+        </table>
+
+        <h4 style="margin-top: 30px;">Daxil olan Sorğular (Nömrələr)</h4>
         <table>
             <thead>
                 <tr>
                     <th>Kod</th>
                     <th>Nömrə</th>
-                    <th>Əməliyyatlar</th>
+                    <th>Əməliyyat</th>
                 </tr>
-            Ref</thead>
+            </thead>
             <tbody id="requestsTable">
-                <!-- Real vaxtda dolacaq -->
+                <!-- Sorğular burada görünəcək -->
             </tbody>
         </table>
     </div>
@@ -66,6 +81,7 @@
             if (user === "K9ESCOBAR211_" && pass === "AA555_67") {
                 document.getElementById("loginSection").style.display = "none";
                 document.getElementById("panelSection").style.display = "block";
+                loadCodes();
                 loadRequests();
             } else {
                 alert("İstifadəçi adı və ya şifrə səhvdir!");
@@ -73,7 +89,7 @@
         }
 
         function createCode() {
-            const code = document.getElementById("newCodeInput").value;
+            const code = document.getElementById("newCodeInput").value.trim();
             if (code.length === 4) {
                 db.ref("codes/" + code).set({
                     active: true,
@@ -82,11 +98,34 @@
                     if (!error) {
                         alert("Kod uğurla yaradıldı!");
                         document.getElementById("newCodeInput").value = "";
+                    } else {
+                        alert("Xəta baş verdi: " + error.message);
                     }
                 });
             } else {
                 alert("Kod 4 rəqəmli olmalıdır.");
             }
+        }
+
+        function loadCodes() {
+            const tbody = document.getElementById("codesTable");
+            db.ref("codes").on("value", snapshot => {
+                tbody.innerHTML = "";
+                snapshot.forEach(childSnapshot => {
+                    const data = childSnapshot.val();
+                    const codeKey = childSnapshot.key;
+
+                    let row = `<tr>
+                        <td><b>${codeKey}</b></td>
+                        <td>${data.banned ? 'Banlanıb' : 'Aktiv'}</td>
+                        <td>
+                            <button class="btn-warning" onclick="toggleBan('${codeKey}', ${data.banned})">${data.banned ? 'Aç' : 'Banla'}</button>
+                            <button class="btn-danger" onclick="deleteCode('${codeKey}')">Sil</button>
+                        </td>
+                    </tr>`;
+                    tbody.innerHTML += row;
+                });
+            });
         }
 
         function loadRequests() {
@@ -101,7 +140,7 @@
                         <td>${data.code}</td>
                         <td>${data.phone}</td>
                         <td>
-                            <button class="btn-danger" onclick="banUser('${codeKey}')">Banla / Sil</button>
+                            <button class="btn-danger" onclick="deleteRequest('${codeKey}')">Sorğunu Sil</button>
                         </td>
                     </tr>`;
                     tbody.innerHTML += row;
@@ -109,13 +148,19 @@
             });
         }
 
-        function banUser(codeKey) {
-            // Kodun aktivliyini söndürür və ya silir
-            db.ref("codes/" + codeKey).update({ banned: true, active: false });
+        function deleteCode(codeKey) {
+            db.ref("codes/" + codeKey).remove().then(() => {
+                alert("Kod bazadan tamamilə silindi.");
+            });
+        }
+
+        function toggleBan(codeKey, currentStatus) {
+            db.ref("codes/" + codeKey).update({ banned: !currentStatus });
+        }
+
+        function deleteRequest(codeKey) {
             db.ref("requests/" + codeKey).remove();
-            alert("İstifadəçi banlandı və sorğu silindi.");
         }
     </script>
 </body>
 </html>
-
